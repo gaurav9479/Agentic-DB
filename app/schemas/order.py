@@ -10,7 +10,7 @@ class OrderCreate(BaseModel):
     customer_email: Optional[str] = None
     customer_phone: Optional[str] = None
     delivery_address: Optional[str] = None
-    # For bargaining - if not provided, uses MRP
+
     selling_price: Optional[float] = None
 
 
@@ -19,18 +19,18 @@ class OrderUpdate(BaseModel):
     status: Optional[str] = None
     customer_name: Optional[str] = None
     customer_email: Optional[str] = None
-    # Allow updating the final price (bargaining)
+
     final_price: Optional[float] = None
 
 
-# ============== CUSTOMER VIEW (Public Bill) ==============
+
 
 class OrderCustomerView(BaseModel):
-    """Order/Bill view for customers - no cost/profit info"""
+
     id: int
     product_name: str
     quantity: int
-    unit_price: float  # Final price per unit
+    unit_price: float 
     total_amount: float
     status: str
     customer_name: str
@@ -41,10 +41,10 @@ class OrderCustomerView(BaseModel):
 
 
 class BillCustomerView(BaseModel):
-    """Customer bill - clean view without profit info"""
+
     order_id: int
     shop_name: str
-    items: List[dict]  # [{name, qty, unit_price, total}]
+    items: List[dict]  
     subtotal: float
     tax: float = 0
     discount: float = 0
@@ -54,7 +54,7 @@ class BillCustomerView(BaseModel):
     created_at: datetime
 
 
-# ============== ADMIN VIEW (With Profit Info) ==============
+
 
 class OrderAdminView(BaseModel):
     """Order view for shop admin - includes cost/profit breakdown"""
@@ -63,14 +63,14 @@ class OrderAdminView(BaseModel):
     product_name: str
     quantity: int
 
-    # Pricing breakdown
-    cost_price: Optional[float]  # What admin paid per unit
-    listed_price: float  # MRP
-    final_price: float  # Sold at (after bargaining)
+
+    cost_price: Optional[float]  
+    listed_price: float  
+    final_price: float  
     unit_price: float
     total_amount: float
 
-    # Profit tracking
+
     total_cost: Optional[float]
     profit: Optional[float]
     discount_given: float
@@ -88,18 +88,18 @@ class OrderAdminView(BaseModel):
 
 
 class BillAdminView(BaseModel):
-    """Admin bill - full view with profit breakdown"""
+
     order_id: int
     shop_name: str
-    items: List[dict]  # [{name, qty, cost, mrp, sold_at, profit}]
+    items: List[dict] 
 
-    # Totals
-    subtotal: float  # Total amount customer pays
-    total_cost: float  # What admin paid
-    total_profit: float  # Revenue - Cost
-    total_discount_given: float  # MRP - Sold price
 
-    # Margins
+    subtotal: float  
+    total_cost: float  
+    total_profit: float  
+    total_discount_given: float  
+
+
     profit_margin_percent: float
 
     customer_name: str
@@ -107,7 +107,7 @@ class BillAdminView(BaseModel):
     created_at: datetime
 
 
-# ============== LEGACY RESPONSE (for backward compatibility) ==============
+
 
 class OrderResponse(BaseModel):
     id: int
@@ -129,10 +129,10 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
-# ============== PROFIT REPORTS ==============
+
 
 class DailySalesReport(BaseModel):
-    """Daily sales summary for shop admin"""
+
     date: str
     total_orders: int
     total_revenue: float
@@ -143,7 +143,7 @@ class DailySalesReport(BaseModel):
 
 
 class ProductProfitReport(BaseModel):
-    """Profit report per product"""
+
     product_id: int
     product_name: str
     units_sold: int

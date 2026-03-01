@@ -37,18 +37,18 @@ from app.services.command_suggestions import CommandSuggestionService
 router = APIRouter()
 command_suggestion_service = CommandSuggestionService()
 
-# Session context storage (in production, use Redis)
+
 session_context: Dict[str, Any] = {}
 
 
-# ============== AGENT COMMAND ENDPOINT ==============
+
 
 @router.post("/command", response_model=CommandResponse)
 async def execute_command(
     command: CommandInput,
     db: AsyncSession = Depends(get_db)
 ):
-    """Main endpoint for natural language commands."""
+
     parser = IntentParser()
     executor = ActionExecutor(db)
     context = {**session_context, **(command.context or {})}
@@ -90,7 +90,7 @@ async def confirm_command(confirmation_id: str, db: AsyncSession = Depends(get_d
     return result
 
 
-# ============== COMMAND SUGGESTIONS ==============
+
 
 @router.get("/command/suggestions")
 async def get_command_suggestions(
@@ -98,35 +98,35 @@ async def get_command_suggestions(
     role: str = "customer",
     limit: int = 5
 ):
-    """Get command suggestions based on partial query and user role"""
+
     suggestions = command_suggestion_service.get_suggestions(query, role, limit)
     return {"suggestions": suggestions}
 
 
 @router.get("/command/all")
 async def get_all_commands(role: str = "customer"):
-    """Get all available commands grouped by category for a role"""
+
     commands = command_suggestion_service.get_all_commands(role)
     return {"commands": commands}
 
 
 @router.get("/command/quick-actions")
 async def get_quick_actions(role: str = "customer"):
-    """Get quick action buttons for a role"""
+
     actions = command_suggestion_service.get_quick_actions(role)
     return {"quick_actions": actions}
 
 
 @router.get("/command/help/{command}")
 async def get_command_help(command: str):
-    """Get detailed help for a specific command"""
+
     help_info = command_suggestion_service.get_command_help(command)
     if not help_info:
         raise HTTPException(status_code=404, detail="Command not found")
     return help_info
 
 
-# ============== CATEGORY ENDPOINTS ==============
+
 
 @router.get("/categories", response_model=List[CategoryResponse])
 async def list_categories(db: AsyncSession = Depends(get_db)):
@@ -177,18 +177,18 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "Category deleted"}
 
 
-# ============== SHOP CATEGORY ENDPOINTS ==============
+
 
 @router.get("/shop-categories", response_model=List[ShopCategoryResponse])
 async def list_shop_categories(db: AsyncSession = Depends(get_db)):
-    """List all shop categories (Beauty, Grocery, Clothing, etc.)"""
+
     service = ShopCategoryService(db)
     return await service.get_all()
 
 
 @router.get("/shop-categories/with-counts")
 async def list_shop_categories_with_counts(db: AsyncSession = Depends(get_db)):
-    """List shop categories with shop counts"""
+
     service = ShopCategoryService(db)
     return await service.get_with_shop_count()
 
@@ -204,7 +204,7 @@ async def get_shop_category(category_id: int, db: AsyncSession = Depends(get_db)
 
 @router.get("/shop-categories/{category_id}/shops-with-stats")
 async def get_category_shops_with_stats(category_id: int, db: AsyncSession = Depends(get_db)):
-    """Get all shops in a category with detailed stats for super admin monitoring"""
+
     shop_service = ShopService(db)
     cat_service = ShopCategoryService(db)
 
@@ -212,7 +212,7 @@ async def get_category_shops_with_stats(category_id: int, db: AsyncSession = Dep
     if not category:
         raise HTTPException(status_code=404, detail="Shop category not found")
 
-    # Get all shops in this category (including inactive for admin view)
+
     from sqlalchemy import select
     from app.models.shop import Shop
     from app.models.order import Order
@@ -225,7 +225,7 @@ async def get_category_shops_with_stats(category_id: int, db: AsyncSession = Dep
 
     shops_with_stats = []
     for shop in shops:
-        # Get profit stats for each shop
+
         profit_result = await db.execute(
             select(
                 func.sum(Order.total_amount).label("total_revenue"),
@@ -305,7 +305,7 @@ async def delete_shop_category(category_id: int, db: AsyncSession = Depends(get_
     return {"message": "Shop category deleted"}
 
 
-# ============== SHOP ENDPOINTS ==============
+
 
 @router.get("/shops", response_model=List[ShopResponse])
 async def list_shops(
@@ -316,14 +316,14 @@ async def list_shops(
     limit: int = 50,
     db: AsyncSession = Depends(get_db)
 ):
-    """List all shops, optionally filtered by category, city, or search"""
+
     service = ShopService(db)
     return await service.get_all(skip, limit, category_id, city, search)
 
 
 @router.get("/shops/by-category/{category_id}")
 async def get_shops_by_category(category_id: int, db: AsyncSession = Depends(get_db)):
-    """Get all shops in a specific category"""
+
     service = ShopService(db)
     return await service.get_by_category(category_id)
 
@@ -339,7 +339,7 @@ async def get_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/shops/{shop_id}/dashboard")
 async def get_shop_dashboard(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Get dashboard stats for a shop owner"""
+
     service = ShopService(db)
     shop = await service.get_by_id(shop_id)
     if not shop:
@@ -349,7 +349,7 @@ async def get_shop_dashboard(shop_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.get("/shops/{shop_id}/admin-stats")
 async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Get comprehensive shop stats for super admin monitoring - includes profit tracking"""
+
     from sqlalchemy import select, func, and_
     from app.models.shop import Shop
     from app.models.order import Order
@@ -365,7 +365,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     this_month = today.replace(day=1)
     last_month = (this_month - timedelta(days=1)).replace(day=1)
 
-    # Overall profit stats
+
     overall_stats = await db.execute(
         select(
             func.sum(Order.total_amount).label("total_revenue"),
@@ -378,7 +378,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     )
     overall = overall_stats.one()
 
-    # Today's stats
+
     today_stats = await db.execute(
         select(
             func.sum(Order.total_amount).label("revenue"),
@@ -388,7 +388,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     )
     today_data = today_stats.one()
 
-    # This month stats
+
     month_stats = await db.execute(
         select(
             func.sum(Order.total_amount).label("revenue"),
@@ -398,7 +398,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     )
     month_data = month_stats.one()
 
-    # Last month stats for comparison
+
     last_month_stats = await db.execute(
         select(
             func.sum(Order.total_amount).label("revenue"),
@@ -413,7 +413,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     )
     last_month_data = last_month_stats.one()
 
-    # Product stats
+
     product_stats = await db.execute(
         select(
             func.count(Product.id).label("total"),
@@ -425,7 +425,7 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
     )
     products = product_stats.one()
 
-    # Top selling products
+
     top_products = await db.execute(
         select(
             Order.product_name,
@@ -447,18 +447,18 @@ async def get_shop_admin_stats(shop_id: int, db: AsyncSession = Depends(get_db))
         for row in top_products.all()
     ]
 
-    # Calculate profit margins
+
     total_revenue = overall.total_revenue or 0
     total_cost = overall.total_cost or 0
     total_profit = overall.total_profit or 0
     profit_margin = round((total_profit / total_cost) * 100, 2) if total_cost > 0 else 0
 
-    # Month over month growth
+
     last_revenue = last_month_data.revenue or 0
     this_revenue = month_data.revenue or 0
     revenue_growth = round(((this_revenue - last_revenue) / last_revenue) * 100, 2) if last_revenue > 0 else 0
 
-    # Get category name
+
     cat_service = ShopCategoryService(db)
     category = await cat_service.get_by_id(shop.category_id) if shop.category_id else None
 
@@ -526,7 +526,7 @@ async def get_shop_products(
     include_inactive: bool = False,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all products for a specific shop"""
+
     product_service = ProductService(db)
     return await product_service.get_all(
         skip, limit, shop_id, category_id, search,
@@ -536,7 +536,7 @@ async def get_shop_products(
 
 @router.get("/shops/{shop_id}/low-stock")
 async def get_shop_low_stock(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Get low stock products for a specific shop"""
+
     product_service = ProductService(db)
     products = await product_service.get_low_stock(shop_id)
     return [
@@ -559,7 +559,7 @@ async def get_shop_orders(
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all orders for a specific shop"""
+
     order_service = OrderService(db)
     return await order_service.get_by_shop(shop_id, status, skip, limit)
 
@@ -589,7 +589,7 @@ async def delete_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "Shop deleted"}
 
 
-# ============== PRODUCT ENDPOINTS ==============
+
 
 @router.get("/products", response_model=List[ProductResponse])
 async def list_products(
@@ -639,7 +639,7 @@ async def get_inventory_stats(db: AsyncSession = Depends(get_db)):
     return await service.get_inventory_stats()
 
 
-# ============== EXPIRY & CLEARANCE ENDPOINTS ==============
+
 
 @router.get("/products/expiring-soon")
 async def get_expiring_soon_products(
@@ -647,7 +647,7 @@ async def get_expiring_soon_products(
     shop_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get products expiring within specified days (admin only)"""
+
     service = ProductService(db)
     products = await service.get_expiring_soon(days, shop_id)
     return [
@@ -672,7 +672,7 @@ async def get_expired_products(
     shop_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get expired products (admin only)"""
+
     service = ProductService(db)
     products = await service.get_expired_products(shop_id)
     return [
@@ -695,7 +695,7 @@ async def get_clearance_products(
     shop_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get products on clearance sale (public endpoint)"""
+
     service = ProductService(db)
     products = await service.get_clearance_products(shop_id)
     return [
@@ -721,7 +721,7 @@ async def get_expiry_stats(
     shop_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get expiry statistics for dashboard"""
+
     service = ProductService(db)
     return await service.get_expiry_stats(shop_id)
 
@@ -732,7 +732,7 @@ async def apply_clearance_to_product(
     discount: Optional[float] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Manually apply clearance sale to a product"""
+
     service = ProductService(db)
     product = await service.apply_clearance_sale(product_id, discount)
     if not product:
@@ -755,7 +755,7 @@ async def remove_clearance_from_product(
     product_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Remove product from clearance sale"""
+
     service = ProductService(db)
     product = await service.remove_from_clearance(product_id)
     if not product:
@@ -768,7 +768,7 @@ async def check_and_apply_expiry_clearance(
     shop_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db)
 ):
-    """Batch job: Check expiring products and auto-apply clearance"""
+
     service = ProductService(db)
     newly_on_clearance = await service.check_and_apply_clearance(shop_id)
     deactivated = await service.deactivate_expired_products(shop_id)
@@ -800,7 +800,7 @@ async def get_shop_expiring_products(
     days: int = 30,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get expiring products for a specific shop"""
+
     service = ProductService(db)
     products = await service.get_expiring_soon(days, shop_id)
     return [
@@ -824,7 +824,7 @@ async def get_shop_clearance_products(
     shop_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get clearance products for a specific shop (public)"""
+
     service = ProductService(db)
     products = await service.get_clearance_products(shop_id)
     return [
@@ -849,7 +849,7 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     product = await service.get_by_id(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    # Increment view count
+
     await service.increment_view(product_id)
     return product
 
@@ -857,7 +857,7 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/products", response_model=ProductResponse)
 async def create_product(data: ProductCreate, db: AsyncSession = Depends(get_db)):
     service = ProductService(db)
-    # Check for duplicate SKU
+
     if data.sku:
         existing = await service.get_by_sku(data.sku)
         if existing:
@@ -888,7 +888,7 @@ async def update_product_stock(
     adjustment_type: str = "set",
     db: AsyncSession = Depends(get_db)
 ):
-    """Update product stock. adjustment_type: 'set', 'add', 'subtract'"""
+
     service = ProductService(db)
     product = await service.get_by_id(product_id)
     if not product:
@@ -919,7 +919,7 @@ async def delete_product(product_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "Product deleted"}
 
 
-# ============== ORDER ENDPOINTS ==============
+
 
 @router.get("/orders", response_model=List[OrderResponse])
 async def list_orders(
@@ -948,7 +948,7 @@ async def create_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=400, detail="Failed to create order")
 
-    # Update product stock
+
     product_service = ProductService(db)
     await product_service.update_stock(data.product_id, -data.quantity, sold=True)
 
@@ -980,7 +980,7 @@ async def cancel_order(order_id: int, db: AsyncSession = Depends(get_db)):
     return order
 
 
-# ============== CUSTOMER ENDPOINTS ==============
+
 
 @router.get("/customers", response_model=List[CustomerResponse])
 async def list_customers(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
@@ -1038,7 +1038,7 @@ async def delete_customer(customer_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "Customer deleted"}
 
 
-# ============== ANALYTICS ENDPOINTS ==============
+
 
 @router.get("/analytics/dashboard")
 async def get_dashboard_analytics(db: AsyncSession = Depends(get_db)):
@@ -1082,7 +1082,7 @@ async def get_monthly_comparison(db: AsyncSession = Depends(get_db)):
     return await service.get_monthly_comparison()
 
 
-# ============== SHOP STOREFRONT ENDPOINTS ==============
+
 
 @router.get("/shop/products")
 async def shop_list_products(
@@ -1092,7 +1092,7 @@ async def shop_list_products(
     limit: int = 20,
     db: AsyncSession = Depends(get_db)
 ):
-    """Public endpoint for customer-facing product listing"""
+
     service = ProductService(db)
     products = await service.get_all(skip, limit, category_id, search, active_only=True)
     return [
@@ -1114,14 +1114,14 @@ async def shop_list_products(
 
 @router.get("/shop/categories")
 async def shop_list_categories(db: AsyncSession = Depends(get_db)):
-    """Public endpoint for customer-facing category listing"""
+
     service = CategoryService(db)
     return await service.get_with_product_count()
 
 
 @router.get("/shop/product/{product_id}")
 async def shop_get_product(product_id: int, db: AsyncSession = Depends(get_db)):
-    """Public endpoint for customer-facing product details"""
+
     service = ProductService(db)
     product = await service.get_by_id(product_id)
     if not product or not product.is_active:
@@ -1145,7 +1145,7 @@ async def shop_get_product(product_id: int, db: AsyncSession = Depends(get_db)):
     }
 
 
-# ============== WEBSOCKET ENDPOINT ==============
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -1158,11 +1158,11 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
-# ============== AUTH ENDPOINTS ==============
+
 
 @router.post("/auth/login", response_model=LoginResponse)
 async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
-    """Authenticate user and return user data"""
+
     service = UserService(db)
     user = await service.authenticate(data.email, data.password)
     if not user:
@@ -1172,12 +1172,12 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
 
 @router.post("/auth/register", response_model=UserResponse)
 async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Register a new customer account"""
+
     service = UserService(db)
     existing = await service.get_by_email(data.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    # Force customer role for public registration
+
     data.role = UserRole.CUSTOMER.value
     user = await service.create(data)
     return user
@@ -1185,35 +1185,34 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/auth/forgot-password", response_model=ForgotPasswordResponse)
 async def forgot_password(data: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
-    """Request a password reset token"""
+
     service = UserService(db)
     token = await service.generate_reset_token(data.email)
 
     if not token:
-        # Don't reveal if email exists or not for security
+
         return ForgotPasswordResponse(
             message="If an account with this email exists, a reset link has been sent.",
             reset_token=None
         )
 
-    # In production, send email with reset link
-    # For demo purposes, we return the token directly
+
     return ForgotPasswordResponse(
         message="Password reset link generated. In production, this would be sent via email.",
-        reset_token=token  # Remove this in production!
+        reset_token=token 
     )
 
 
 @router.post("/auth/verify-reset-token", response_model=VerifyResetTokenResponse)
 async def verify_reset_token(data: VerifyResetTokenRequest, db: AsyncSession = Depends(get_db)):
-    """Verify if a reset token is valid"""
+
     service = UserService(db)
     user = await service.verify_reset_token(data.token)
 
     if not user:
         return VerifyResetTokenResponse(valid=False, email=None)
 
-    # Mask email for privacy
+
     email = user.email
     masked_email = email[0:2] + "***" + email[email.index("@"):]
 
@@ -1222,7 +1221,7 @@ async def verify_reset_token(data: VerifyResetTokenRequest, db: AsyncSession = D
 
 @router.post("/auth/reset-password", response_model=ResetPasswordResponse)
 async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
-    """Reset password using a valid token"""
+
     service = UserService(db)
     success = await service.reset_password(data.token, data.new_password)
 
@@ -1235,7 +1234,7 @@ async def reset_password(data: ResetPasswordRequest, db: AsyncSession = Depends(
     )
 
 
-# ============== USER MANAGEMENT (Super Admin only) ==============
+
 
 @router.get("/users", response_model=List[UserResponse])
 async def list_users(
@@ -1244,7 +1243,7 @@ async def list_users(
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
-    """List all users (Super Admin only)"""
+
     service = UserService(db)
     return await service.get_all(role, skip, limit)
 
@@ -1260,7 +1259,7 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(data: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Create a new user (Super Admin only)"""
+
     service = UserService(db)
     existing = await service.get_by_email(data.email)
     if existing:
@@ -1287,11 +1286,11 @@ async def delete_user(user_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": "User deleted"}
 
 
-# ============== PLATFORM STATS (Super Admin) ==============
+
 
 @router.get("/platform/stats")
 async def get_platform_stats(db: AsyncSession = Depends(get_db)):
-    """Get platform-wide statistics for super admin"""
+
     service = UserService(db)
     return await service.get_platform_stats()
 
@@ -1304,10 +1303,10 @@ async def get_all_platform_shops(
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all shops with filters for super admin"""
+
     service = ShopService(db)
     shops = await service.get_all(skip, limit)
-    # Filter based on parameters
+
     if is_verified is not None:
         shops = [s for s in shops if s.is_verified == is_verified]
     if is_active is not None:
@@ -1317,7 +1316,7 @@ async def get_all_platform_shops(
 
 @router.patch("/platform/shops/{shop_id}/verify")
 async def verify_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Verify a shop (Super Admin only)"""
+
     service = ShopService(db)
     shop = await service.get_by_id(shop_id)
     if not shop:
@@ -1330,7 +1329,7 @@ async def verify_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.patch("/platform/shops/{shop_id}/suspend")
 async def suspend_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Suspend a shop (Super Admin only)"""
+
     service = ShopService(db)
     shop = await service.get_by_id(shop_id)
     if not shop:
@@ -1343,7 +1342,7 @@ async def suspend_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
 
 @router.patch("/platform/shops/{shop_id}/activate")
 async def activate_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
-    """Activate a suspended shop (Super Admin only)"""
+
     service = ShopService(db)
     shop = await service.get_by_id(shop_id)
     if not shop:
@@ -1354,7 +1353,7 @@ async def activate_shop(shop_id: int, db: AsyncSession = Depends(get_db)):
     return {"message": f"Shop '{shop.name}' has been activated", "shop_id": shop_id}
 
 
-# ============== HEALTH CHECK ==============
+
 
 @router.get("/health")
 async def health_check():

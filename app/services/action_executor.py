@@ -34,7 +34,7 @@ class ActionExecutor:
     async def execute(
         self, intent: ParsedIntent, confirmed: bool = False
     ) -> CommandResponse:
-        # Check if confirmation is required
+
         if intent.requires_confirmation and not confirmed:
             confirmation_id = str(uuid.uuid4())
             self.pending_confirmations[confirmation_id] = intent
@@ -46,9 +46,9 @@ class ActionExecutor:
                 confirmation_id=confirmation_id,
             )
 
-        # Route to appropriate handler
+
         action_handlers = {
-            # Product actions
+
             "create_product": self._create_product,
             "update_product": self._update_product,
             "delete_product": self._delete_product,
@@ -60,7 +60,7 @@ class ActionExecutor:
             "set_product_price": self._set_product_price,
             "toggle_product_status": self._toggle_product_status,
             "set_featured": self._set_featured,
-            # Order actions
+
             "create_order": self._create_order,
             "update_order": self._update_order,
             "cancel_order": self._cancel_order,
@@ -70,17 +70,17 @@ class ActionExecutor:
             "ship_order": self._ship_order,
             "deliver_order": self._deliver_order,
             "refund_order": self._refund_order,
-            # Customer actions
+
             "create_customer": self._create_customer,
             "update_customer": self._update_customer,
             "delete_customer": self._delete_customer,
             "list_customers": self._list_customers,
             "get_customer": self._get_customer,
             "search_customers": self._search_customers,
-            # Customer order actions
+
             "place_order": self._place_order,
             "list_my_orders": self._list_my_orders,
-            # Shop actions (Super Admin)
+
             "prefill_shop_form": self._prefill_shop_form,
             "create_shop": self._create_shop,
             "update_shop": self._update_shop,
@@ -91,32 +91,32 @@ class ActionExecutor:
             "suspend_shop": self._suspend_shop,
             "activate_shop": self._activate_shop,
             "get_pending_shops": self._get_pending_shops,
-            # Shop dashboard actions (Shop Admin)
+
             "get_shop_dashboard": self._get_shop_dashboard,
             "get_shop_low_stock": self._get_shop_low_stock,
             "get_shop_orders": self._get_shop_orders,
-            # User actions (Super Admin)
+
             "create_user": self._create_user,
             "update_user": self._update_user,
             "delete_user": self._delete_user,
             "list_users": self._list_users,
             "get_user": self._get_user,
-            # Platform actions (Super Admin)
+
             "get_platform_stats": self._get_platform_stats,
-            # Category actions
+
             "list_shop_categories": self._list_shop_categories,
             "list_product_categories": self._list_product_categories,
             "create_shop_category": self._create_shop_category,
             "create_product_category": self._create_product_category,
-            # Analytics actions
+
             "get_analytics": self._get_analytics,
-            # Billing actions (Shop Admin)
+
             "sell_at_price": self._sell_at_price,
             "generate_bill": self._generate_bill,
             "get_daily_profit": self._get_daily_profit,
             "get_product_profit": self._get_product_profit,
             "get_profit_summary": self._get_profit_summary,
-            # Error handling
+
             "error": self._handle_error,
         }
 
@@ -146,10 +146,10 @@ class ActionExecutor:
             result = await self.execute(step)
             results.append(result)
             if not result.success and not result.requires_confirmation:
-                break  # Stop on failure
+                break  
         return results
 
-    # Product handlers
+
     async def _create_product(self, params: Dict[str, Any]) -> CommandResponse:
         try:
             data = ProductCreate(
@@ -252,7 +252,7 @@ class ActionExecutor:
             data={"id": product.id, "name": product.name, "price": product.price, "quantity": product.quantity},
         )
 
-    # Order handlers
+
     async def _create_order(self, params: Dict[str, Any]) -> CommandResponse:
         try:
             data = OrderCreate(
@@ -382,7 +382,7 @@ class ActionExecutor:
             message=params.get("error", "An unknown error occurred"),
         )
 
-    # Customer handlers
+
     async def _create_customer(self, params: Dict[str, Any]) -> CommandResponse:
         try:
             data = CustomerCreate(
@@ -391,7 +391,7 @@ class ActionExecutor:
                 phone=params.get("phone"),
                 address=params.get("address"),
             )
-            # Check if email already exists
+
             existing = await self.customer_service.get_by_email(data.email)
             if existing:
                 return CommandResponse(
@@ -517,7 +517,7 @@ class ActionExecutor:
             data=[{"id": c.id, "name": c.name, "email": c.email} for c in customers],
         )
 
-    # Additional Product handlers
+
     async def _search_products(self, params: Dict[str, Any]) -> CommandResponse:
         query = params.get("query")
         if not query:
@@ -638,7 +638,7 @@ class ActionExecutor:
                 message=f"Product {product_id} not found",
             )
 
-        # If is_active not specified, toggle current status
+
         new_status = is_active if is_active is not None else not product.is_active
         data = ProductUpdate(is_active=new_status)
         await self.product_service.update(product_id, data)
@@ -680,7 +680,7 @@ class ActionExecutor:
             data={"id": product_id, "name": product.name, "is_featured": is_featured},
         )
 
-    # Order status handlers
+
     async def _confirm_order(self, params: Dict[str, Any]) -> CommandResponse:
         order_id = params.get("order_id")
         if not order_id:
@@ -827,7 +827,7 @@ class ActionExecutor:
             data={"id": order_id, "status": "refunded", "amount": order.total_amount, "reason": reason},
         )
 
-    # Customer order handlers
+
     async def _place_order(self, params: Dict[str, Any]) -> CommandResponse:
         product_id = params.get("product_id")
         quantity = params.get("quantity", 1)
@@ -854,7 +854,7 @@ class ActionExecutor:
                 message=f"Not enough stock. Available: {product.quantity}, Requested: {quantity}",
             )
 
-        # Create order
+
         order_data = OrderCreate(
             product_id=product_id,
             quantity=quantity,
@@ -883,7 +883,7 @@ class ActionExecutor:
 
         orders = await self.order_service.get_all()
 
-        # Filter by customer if provided
+
         if customer_email:
             orders = [o for o in orders if o.customer_email == customer_email]
 
@@ -901,7 +901,7 @@ class ActionExecutor:
             } for o in orders],
         )
 
-    # Shop form pre-fill handler (Super Admin)
+
     async def _prefill_shop_form(self, params: Dict[str, Any]) -> CommandResponse:
         """Return form data for frontend to pre-fill the shop registration form"""
         form_data = {
@@ -917,7 +917,7 @@ class ActionExecutor:
             "gst_number": params.get("gst_number", ""),
         }
 
-        # Build a message showing what will be pre-filled
+
         filled_fields = [k for k, v in form_data.items() if v]
         message = "Opening shop registration form"
         if filled_fields:
@@ -934,7 +934,7 @@ class ActionExecutor:
             },
         )
 
-    # Shop handlers (Super Admin)
+
     async def _create_shop(self, params: Dict[str, Any]) -> CommandResponse:
         try:
             data = ShopCreate(
@@ -1022,7 +1022,7 @@ class ActionExecutor:
             active_only=False
         )
 
-        # Filter by verification status if specified
+
         if is_verified is not None:
             shops = [s for s in shops if s.is_verified == is_verified]
         if is_active is not None:
@@ -1186,7 +1186,7 @@ class ActionExecutor:
             } for s in pending_shops],
         )
 
-    # Shop Dashboard handlers (Shop Admin)
+
     async def _get_shop_dashboard(self, params: Dict[str, Any]) -> CommandResponse:
         shop_id = params.get("shop_id")
         if not shop_id:
@@ -1260,10 +1260,10 @@ class ActionExecutor:
             } for o in orders],
         )
 
-    # User handlers (Super Admin)
+
     async def _create_user(self, params: Dict[str, Any]) -> CommandResponse:
         try:
-            # Check if email exists
+
             existing = await self.user_service.get_by_email(params["email"])
             if existing:
                 return CommandResponse(
@@ -1386,7 +1386,7 @@ class ActionExecutor:
             },
         )
 
-    # Platform handlers (Super Admin)
+
     async def _get_platform_stats(self, params: Dict[str, Any]) -> CommandResponse:
         stats = await self.user_service.get_platform_stats()
         return CommandResponse(
@@ -1396,7 +1396,7 @@ class ActionExecutor:
             data=stats,
         )
 
-    # Category handlers
+
     async def _list_shop_categories(self, params: Dict[str, Any]) -> CommandResponse:
         categories = await self.shop_category_service.get_with_shop_count()
         return CommandResponse(
@@ -1458,7 +1458,7 @@ class ActionExecutor:
                 message=f"Missing required parameter: {e}",
             )
 
-    # Analytics handlers
+
     async def _get_analytics(self, params: Dict[str, Any]) -> CommandResponse:
         analytics_type = params.get("type", "dashboard")
 
@@ -1487,7 +1487,7 @@ class ActionExecutor:
             data=data,
         )
 
-    # Billing handlers (Shop Admin)
+
     async def _sell_at_price(self, params: Dict[str, Any]) -> CommandResponse:
         """Sell a product at a bargained price"""
         product_id = params.get("product_id")
@@ -1548,9 +1548,9 @@ class ActionExecutor:
         )
 
     async def _generate_bill(self, params: Dict[str, Any]) -> CommandResponse:
-        """Generate bill for an order - customer or admin view"""
+
         order_id = params.get("order_id")
-        bill_type = params.get("bill_type", "customer")  # customer or admin
+        bill_type = params.get("bill_type", "customer")
 
         if not order_id:
             return CommandResponse(
@@ -1582,7 +1582,7 @@ class ActionExecutor:
     async def _get_daily_profit(self, params: Dict[str, Any]) -> CommandResponse:
         """Get daily profit report for a shop"""
         shop_id = params.get("shop_id")
-        date_str = params.get("date")  # Optional: YYYY-MM-DD format
+        date_str = params.get("date")  
 
         if not shop_id:
             return CommandResponse(
@@ -1621,7 +1621,7 @@ class ActionExecutor:
         )
 
     async def _get_product_profit(self, params: Dict[str, Any]) -> CommandResponse:
-        """Get profit report per product for a shop"""
+
         shop_id = params.get("shop_id")
 
         if not shop_id:
@@ -1651,7 +1651,7 @@ class ActionExecutor:
         )
 
     async def _get_profit_summary(self, params: Dict[str, Any]) -> CommandResponse:
-        """Get overall profit summary for shop dashboard"""
+
         shop_id = params.get("shop_id")
 
         if not shop_id:

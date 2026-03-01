@@ -53,13 +53,13 @@ class LoginResponse(BaseModel):
 
 
 class ShopOwnerRegister(BaseModel):
-    """Registration for shop owners - creates user + shop"""
-    # User details
+
+
     email: EmailStr
     password: str
     name: str
     phone: Optional[str] = None
-    # Shop details
+
     shop_name: str
     shop_description: Optional[str] = None
     shop_category_id: Optional[int] = None
@@ -75,7 +75,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ForgotPasswordResponse(BaseModel):
     message: str
-    reset_token: Optional[str] = None  # Only for demo - in production, send via email
+    reset_token: Optional[str] = None  
 
 
 class VerifyResetTokenRequest(BaseModel):

@@ -13,20 +13,19 @@ class AnalyticsService:
         self.db = db
 
     async def get_dashboard_stats(self) -> Dict[str, Any]:
-        """Get overall dashboard statistics"""
-        # Total products
+
         products_result = await self.db.execute(select(func.count(Product.id)))
         total_products = products_result.scalar() or 0
 
-        # Total orders
+
         orders_result = await self.db.execute(select(func.count(Order.id)))
         total_orders = orders_result.scalar() or 0
 
-        # Total customers
+
         customers_result = await self.db.execute(select(func.count(Customer.id)))
         total_customers = customers_result.scalar() or 0
 
-        # Total revenue (excluding cancelled orders)
+
         revenue_result = await self.db.execute(
             select(func.sum(Order.total_amount)).where(
                 Order.status != OrderStatus.CANCELLED.value
@@ -34,7 +33,7 @@ class AnalyticsService:
         )
         total_revenue = revenue_result.scalar() or 0.0
 
-        # Pending orders
+
         pending_result = await self.db.execute(
             select(func.count(Order.id)).where(
                 Order.status == OrderStatus.PENDING.value
@@ -42,7 +41,7 @@ class AnalyticsService:
         )
         pending_orders = pending_result.scalar() or 0
 
-        # Average order value
+
         avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
 
         return {
@@ -84,7 +83,7 @@ class AnalyticsService:
         )
         rows = result.all()
 
-        # Fill in missing days with zero
+
         date_data = {str(row[0]): {"revenue": float(row[1]), "orders": row[2]} for row in rows}
 
         all_days = []
@@ -170,7 +169,7 @@ class AnalyticsService:
         this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
 
-        # This month revenue
+
         this_month_result = await self.db.execute(
             select(func.sum(Order.total_amount), func.count(Order.id))
             .where(
@@ -182,7 +181,7 @@ class AnalyticsService:
         )
         this_month = this_month_result.one()
 
-        # Last month revenue
+
         last_month_result = await self.db.execute(
             select(func.sum(Order.total_amount), func.count(Order.id))
             .where(

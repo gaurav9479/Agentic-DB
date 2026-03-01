@@ -22,14 +22,10 @@ class BillingService:
         customer_email: Optional[str] = None,
         customer_phone: Optional[str] = None,
         delivery_address: Optional[str] = None,
-        selling_price: Optional[float] = None,  # Bargained price
+        selling_price: Optional[float] = None, 
         shop_id: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """
-        Create an order with proper pricing breakdown.
-        If selling_price is provided, it's the bargained price.
-        Otherwise, uses MRP.
-        """
+
         product = self.db.query(Product).filter(Product.id == product_id).first()
         if not product:
             return {"success": False, "error": "Product not found"}
@@ -37,12 +33,12 @@ class BillingService:
         if product.quantity < quantity:
             return {"success": False, "error": f"Insufficient stock. Available: {product.quantity}"}
 
-        # Pricing calculation
+
         cost_price = product.cost_price or 0
-        listed_price = product.price  # MRP
+        listed_price = product.price  
         final_price = selling_price if selling_price else listed_price
 
-        # Check minimum price constraint
+
         if product.min_price and final_price < product.min_price:
             return {
                 "success": False,
@@ -50,7 +46,7 @@ class BillingService:
                 "min_price": product.min_price
             }
 
-        # Check if selling at loss
+
         if cost_price > 0 and final_price < cost_price:
             return {
                 "success": False,
@@ -59,13 +55,13 @@ class BillingService:
                 "loss_per_unit": cost_price - final_price
             }
 
-        # Calculate totals
+
         total_amount = final_price * quantity
         total_cost = cost_price * quantity if cost_price else None
         profit = total_amount - total_cost if total_cost else None
         discount_given = (listed_price - final_price) * quantity
 
-        # Create order
+
         order = Order(
             shop_id=shop_id or product.shop_id,
             product_id=product_id,
@@ -86,7 +82,7 @@ class BillingService:
             status=OrderStatus.PENDING.value,
         )
 
-        # Update product quantity
+
         product.quantity -= quantity
         product.sold_count += quantity
 
@@ -107,7 +103,7 @@ class BillingService:
         }
 
     def generate_customer_bill(self, order_id: int) -> Dict[str, Any]:
-        """Generate customer-facing bill (no profit info)"""
+
         order = self.db.query(Order).filter(Order.id == order_id).first()
         if not order:
             return {"success": False, "error": "Order not found"}
@@ -129,7 +125,7 @@ class BillingService:
                 }
             ],
             "subtotal": order.total_amount,
-            "tax": 0,  # Add tax calculation if needed
+            "tax": 0,  
             "grand_total": order.total_amount,
             "customer": {
                 "name": order.customer_name,
@@ -142,7 +138,7 @@ class BillingService:
         return {"success": True, "bill": bill}
 
     def generate_admin_bill(self, order_id: int) -> Dict[str, Any]:
-        """Generate admin-facing bill with full profit breakdown"""
+
         order = self.db.query(Order).filter(Order.id == order_id).first()
         if not order:
             return {"success": False, "error": "Order not found"}
@@ -150,7 +146,7 @@ class BillingService:
         shop = self.db.query(Shop).filter(Shop.id == order.shop_id).first()
         shop_name = shop.name if shop else "Shop"
 
-        # Calculate profit margin
+
         profit_margin = 0
         if order.total_cost and order.total_cost > 0:
             profit_margin = round(((order.profit or 0) / order.total_cost) * 100, 2)
@@ -192,7 +188,7 @@ class BillingService:
     def get_daily_profit_report(
         self, shop_id: int, report_date: Optional[date] = None
     ) -> Dict[str, Any]:
-        """Get daily profit report for a shop"""
+
         if not report_date:
             report_date = date.today()
 
@@ -229,8 +225,8 @@ class BillingService:
         }
 
     def get_product_profit_report(self, shop_id: int) -> Dict[str, Any]:
-        """Get profit report per product for a shop"""
-        # Group orders by product
+
+
         results = (
             self.db.query(
                 Order.product_id,
@@ -265,7 +261,7 @@ class BillingService:
                 "avg_profit_per_unit": round(profit / units, 2) if units > 0 else 0,
             })
 
-        # Sort by profit descending
+
         products.sort(key=lambda x: x["total_profit"], reverse=True)
 
         return {"success": True, "products": products}
@@ -277,19 +273,16 @@ class BillingService:
         quantity: int,
         customer_name: str,
         customer_phone: Optional[str] = None,
-        force: bool = False,  # Force sale even at loss
+        force: bool = False, 
     ) -> Dict[str, Any]:
-        """
-        Quick sale at bargained price.
-        This is the main command for "sell product X at Y price"
-        """
+
         product = self.db.query(Product).filter(Product.id == product_id).first()
         if not product:
             return {"success": False, "error": "Product not found"}
 
         cost_price = product.cost_price or 0
 
-        # Check minimum price
+
         if product.min_price and selling_price < product.min_price and not force:
             return {
                 "success": False,
@@ -298,7 +291,7 @@ class BillingService:
                 "confirmation_type": "below_min_price",
             }
 
-        # Check if selling at loss
+
         if cost_price > 0 and selling_price < cost_price and not force:
             loss = cost_price - selling_price
             return {
@@ -309,7 +302,7 @@ class BillingService:
                 "loss_per_unit": loss,
             }
 
-        # Create the order
+
         return self.create_order_with_pricing(
             product_id=product_id,
             quantity=quantity,
@@ -319,8 +312,8 @@ class BillingService:
         )
 
     def get_shop_profit_summary(self, shop_id: int) -> Dict[str, Any]:
-        """Get overall profit summary for shop dashboard"""
-        # All time stats
+
+
         all_orders = (
             self.db.query(Order)
             .filter(
@@ -330,7 +323,7 @@ class BillingService:
             .all()
         )
 
-        # Today's stats
+
         today = date.today()
         today_orders = [
             o for o in all_orders

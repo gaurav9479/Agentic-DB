@@ -15,15 +15,15 @@ class UserService:
         self.db = db
 
     def _hash_password(self, password: str) -> str:
-        """Simple password hashing - in production use bcrypt"""
+
         return hashlib.sha256(password.encode()).hexdigest()
 
     def _verify_password(self, password: str, password_hash: str) -> bool:
-        """Verify password against hash"""
+
         return self._hash_password(password) == password_hash
 
     async def create(self, data: UserCreate) -> User:
-        """Create a new user"""
+
         user = User(
             email=data.email,
             password_hash=self._hash_password(data.password),
@@ -38,21 +38,21 @@ class UserService:
         return user
 
     async def get_by_id(self, user_id: int) -> Optional[User]:
-        """Get user by ID"""
+
         result = await self.db.execute(
             select(User).where(User.id == user_id)
         )
         return result.scalar_one_or_none()
 
     async def get_by_email(self, email: str) -> Optional[User]:
-        """Get user by email"""
+
         result = await self.db.execute(
             select(User).where(User.email == email)
         )
         return result.scalar_one_or_none()
 
     async def authenticate(self, email: str, password: str) -> Optional[User]:
-        """Authenticate user with email and password"""
+
         user = await self.get_by_email(email)
         if not user:
             return None
@@ -61,7 +61,7 @@ class UserService:
         if not user.is_active:
             return None
 
-        # Update last login
+
         user.last_login = datetime.utcnow()
         await self.db.commit()
         await self.db.refresh(user)
@@ -73,7 +73,7 @@ class UserService:
         skip: int = 0,
         limit: int = 100
     ) -> List[User]:
-        """Get all users, optionally filtered by role"""
+
         query = select(User)
         if role:
             query = query.where(User.role == role)
@@ -83,7 +83,7 @@ class UserService:
         return list(result.scalars().all())
 
     async def update(self, user_id: int, data: UserUpdate) -> Optional[User]:
-        """Update user"""
+
         user = await self.get_by_id(user_id)
         if not user:
             return None
@@ -97,7 +97,7 @@ class UserService:
         return user
 
     async def delete(self, user_id: int) -> bool:
-        """Delete user"""
+
         user = await self.get_by_id(user_id)
         if not user:
             return False
@@ -109,7 +109,7 @@ class UserService:
     async def change_password(
         self, user_id: int, old_password: str, new_password: str
     ) -> bool:
-        """Change user password"""
+
         user = await self.get_by_id(user_id)
         if not user:
             return False
@@ -122,15 +122,15 @@ class UserService:
         return True
 
     async def generate_reset_token(self, email: str) -> Optional[str]:
-        """Generate a password reset token for the user"""
+
         user = await self.get_by_email(email)
         if not user:
             return None
 
-        # Generate a secure random token
+
         token = secrets.token_urlsafe(32)
 
-        # Set token and expiration (1 hour from now)
+
         user.reset_token = token
         user.reset_token_expires = datetime.now(timezone.utc) + timedelta(hours=1)
 
@@ -140,7 +140,7 @@ class UserService:
         return token
 
     async def verify_reset_token(self, token: str) -> Optional[User]:
-        """Verify a password reset token and return the user"""
+
         result = await self.db.execute(
             select(User).where(User.reset_token == token)
         )
@@ -149,19 +149,19 @@ class UserService:
         if not user:
             return None
 
-        # Check if token is expired
+
         if user.reset_token_expires and user.reset_token_expires < datetime.now(timezone.utc):
             return None
 
         return user
 
     async def reset_password(self, token: str, new_password: str) -> bool:
-        """Reset password using a valid token"""
+
         user = await self.verify_reset_token(token)
         if not user:
             return False
 
-        # Update password and clear token
+
         user.password_hash = self._hash_password(new_password)
         user.reset_token = None
         user.reset_token_expires = None
@@ -170,16 +170,16 @@ class UserService:
         return True
 
     async def get_shop_owners(self) -> List[User]:
-        """Get all shop owners (admin role)"""
+
         return await self.get_all(role=UserRole.ADMIN.value)
 
     async def get_customers(self) -> List[User]:
-        """Get all customers"""
+
         return await self.get_all(role=UserRole.CUSTOMER.value)
 
     async def get_platform_stats(self) -> dict:
-        """Get platform-wide statistics for super admin"""
-        # Total users by role
+
+
         total_users = await self.db.execute(select(func.count(User.id)))
 
         shop_owners = await self.db.execute(
@@ -190,7 +190,7 @@ class UserService:
             select(func.count(User.id)).where(User.role == UserRole.CUSTOMER.value)
         )
 
-        # Active shops
+
         active_shops = await self.db.execute(
             select(func.count(Shop.id)).where(Shop.is_active == True)
         )
@@ -199,7 +199,7 @@ class UserService:
             select(func.count(Shop.id)).where(Shop.is_verified == True)
         )
 
-        # Revenue
+
         total_revenue = await self.db.execute(
             select(func.sum(Shop.total_revenue))
         )
@@ -215,13 +215,13 @@ class UserService:
 
 
 async def create_default_users(db: AsyncSession):
-    """Create default users for testing"""
+
     service = UserService(db)
 
-    # Check if super admin exists
+
     existing = await service.get_by_email("superadmin@kommandai.com")
     if not existing:
-        # Create Super Admin
+
         await service.create(UserCreate(
             email="superadmin@kommandai.com",
             password="qwert12345",
@@ -230,10 +230,10 @@ async def create_default_users(db: AsyncSession):
         ))
         print("Created Super Admin: superadmin@kommandai.com / qwert12345")
 
-    # Check if shop owner (Admin) exists
+
     existing = await service.get_by_email("admin@kommandai.com")
     if not existing:
-        # Get the Glamour Beauty Store shop_id
+
         result = await db.execute(select(Shop).where(Shop.name == "Glamour Beauty Store"))
         shop = result.scalar_one_or_none()
         shop_id = shop.id if shop else None
@@ -247,7 +247,7 @@ async def create_default_users(db: AsyncSession):
         ))
         print("Created Admin (Shop Owner): admin@kommandai.com / qwert12345")
 
-    # Check if customer exists
+
     existing = await service.get_by_email("customer@kommandai.com")
     if not existing:
         await service.create(UserCreate(

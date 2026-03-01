@@ -172,10 +172,10 @@ class ShopService:
         return True
 
     async def get_dashboard_stats(self, shop_id: int) -> Dict[str, Any]:
-        """Get comprehensive dashboard stats for a shop owner"""
+
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-        # Product stats
+
         total_products = await self.db.execute(
             select(func.count(Product.id))
             .where(Product.shop_id == shop_id)
@@ -209,14 +209,14 @@ class ShopService:
         )
         out_of_stock = out_of_stock.scalar() or 0
 
-        # Inventory value
+
         inv_value = await self.db.execute(
             select(func.sum(Product.price * Product.quantity))
             .where(and_(Product.shop_id == shop_id, Product.is_active == True))
         )
         inventory_value = inv_value.scalar() or 0
 
-        # Order stats
+
         total_orders = await self.db.execute(
             select(func.count(Order.id))
             .where(Order.shop_id == shop_id)
@@ -235,7 +235,7 @@ class ShopService:
         )
         today_orders = today_orders.scalar() or 0
 
-        # Revenue
+
         total_revenue = await self.db.execute(
             select(func.sum(Order.total_amount))
             .where(and_(Order.shop_id == shop_id, Order.status != "cancelled"))
@@ -252,7 +252,7 @@ class ShopService:
         )
         today_revenue = today_revenue.scalar() or 0
 
-        # Unique customers
+
         total_customers = await self.db.execute(
             select(func.count(func.distinct(Order.customer_email)))
             .where(Order.shop_id == shop_id)

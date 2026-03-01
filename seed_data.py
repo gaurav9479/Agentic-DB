@@ -15,14 +15,14 @@ from app.models import (
 
 
 def hash_password(password: str) -> str:
-    """Simple password hashing for demo purposes"""
+
     return hashlib.sha256(password.encode()).hexdigest()
 
 
 async def clear_data():
-    """Clear existing data"""
+
     async with async_session() as db:
-        # Delete in order to respect foreign keys
+
         await db.execute(text("DELETE FROM action_logs"))
         await db.execute(text("DELETE FROM orders"))
         await db.execute(text("DELETE FROM products"))
@@ -36,7 +36,7 @@ async def clear_data():
 
 
 async def seed_shop_categories():
-    """Create shop categories (types of shops)"""
+
     categories = [
         {"name": "Beauty & Cosmetics", "icon": "💄", "description": "Makeup, skincare, and beauty products", "is_perishable": True},
         {"name": "Grocery", "icon": "🛒", "description": "Fresh produce, pantry staples, and household items", "is_perishable": True},
@@ -64,38 +64,38 @@ async def seed_shop_categories():
         await db.commit()
         print(f"✓ Created {len(categories)} shop categories")
 
-        # Return IDs for reference
+
         result = await db.execute(text("SELECT id, name FROM shop_categories"))
         return {row[1]: row[0] for row in result.fetchall()}
 
 
 async def seed_product_categories():
-    """Create product categories"""
+
     categories = [
-        # Beauty
+
         {"name": "Lipstick", "description": "Lip colors and glosses"},
         {"name": "Foundation", "description": "Base makeup products"},
         {"name": "Skincare", "description": "Moisturizers, serums, and treatments"},
         {"name": "Haircare", "description": "Shampoos, conditioners, and styling"},
         {"name": "Perfumes", "description": "Fragrances and deodorants"},
-        # Electronics
+
         {"name": "Smartphones", "description": "Mobile phones and accessories"},
         {"name": "Laptops", "description": "Notebooks and computers"},
         {"name": "Audio", "description": "Headphones, speakers, and earbuds"},
         {"name": "Accessories", "description": "Cases, chargers, and cables"},
         {"name": "Wearables", "description": "Smartwatches and fitness bands"},
-        # Grocery
+
         {"name": "Fruits & Vegetables", "description": "Fresh produce"},
         {"name": "Dairy", "description": "Milk, cheese, and eggs"},
         {"name": "Snacks", "description": "Chips, cookies, and treats"},
         {"name": "Beverages", "description": "Drinks and juices"},
         {"name": "Staples", "description": "Rice, flour, and pulses"},
-        # Fashion
+
         {"name": "Men's Clothing", "description": "Shirts, pants, and suits"},
         {"name": "Women's Clothing", "description": "Dresses, tops, and bottoms"},
         {"name": "Footwear", "description": "Shoes and sandals"},
         {"name": "Bags", "description": "Handbags and backpacks"},
-        # Sports
+
         {"name": "Gym Equipment", "description": "Weights and machines"},
         {"name": "Sports Gear", "description": "Cricket, football, badminton"},
     ]
@@ -116,7 +116,7 @@ async def seed_product_categories():
 
 
 async def seed_shops(shop_category_ids):
-    """Create shops"""
+
     shops = [
         {
             "name": "Glamour Beauty Store",
@@ -244,9 +244,9 @@ async def seed_shops(shop_category_ids):
 
 
 async def seed_products(shop_ids, category_ids):
-    """Create products for each shop with cost_price and min_price"""
 
-    # Beauty products - cost, price, min_price for bargaining
+
+
     beauty_products = [
         {"name": "Ruby Red Lipstick", "brand": "Lakme", "cost": 150, "price": 299, "min": 220, "category": "Lipstick"},
         {"name": "Matte Finish Foundation", "brand": "Maybelline", "cost": 350, "price": 599, "min": 450, "category": "Foundation"},
@@ -262,7 +262,7 @@ async def seed_products(shop_ids, category_ids):
         {"name": "Mascara Volume", "brand": "Maybelline", "cost": 220, "price": 449, "min": 350, "category": "Lipstick"},
     ]
 
-    # Electronics products
+
     electronics_products = [
         {"name": "iPhone 15 Pro", "brand": "Apple", "cost": 110000, "price": 134900, "min": 125000, "category": "Smartphones"},
         {"name": "Samsung Galaxy S24", "brand": "Samsung", "cost": 65000, "price": 79999, "min": 72000, "category": "Smartphones"},
@@ -279,7 +279,7 @@ async def seed_products(shop_ids, category_ids):
         {"name": "Samsung Galaxy Watch 6", "brand": "Samsung", "cost": 22000, "price": 29999, "min": 26000, "category": "Wearables"},
     ]
 
-    # Grocery products
+
     grocery_products = [
         {"name": "Organic Bananas (1kg)", "brand": "Farm Fresh", "cost": 35, "price": 59, "min": 45, "category": "Fruits & Vegetables"},
         {"name": "Red Apples (1kg)", "brand": "Himachal", "cost": 90, "price": 149, "min": 120, "category": "Fruits & Vegetables"},
@@ -298,7 +298,7 @@ async def seed_products(shop_ids, category_ids):
         {"name": "Toor Dal (1kg)", "brand": "Tata", "cost": 120, "price": 169, "min": 145, "category": "Staples"},
     ]
 
-    # Fashion products
+
     fashion_products = [
         {"name": "Slim Fit Cotton Shirt", "brand": "Van Heusen", "cost": 800, "price": 1499, "min": 1100, "category": "Men's Clothing"},
         {"name": "Chino Pants", "brand": "Allen Solly", "cost": 1100, "price": 1999, "min": 1500, "category": "Men's Clothing"},
@@ -315,7 +315,7 @@ async def seed_products(shop_ids, category_ids):
         {"name": "Women's Handbag", "brand": "Lavie", "cost": 1200, "price": 2199, "min": 1700, "category": "Bags"},
     ]
 
-    # Sports products
+
     sports_products = [
         {"name": "Yoga Mat Premium", "brand": "Decathlon", "cost": 400, "price": 799, "min": 600, "category": "Gym Equipment"},
         {"name": "Dumbbell Set 10kg", "brand": "Kore", "cost": 1200, "price": 1999, "min": 1600, "category": "Gym Equipment"},
@@ -327,7 +327,7 @@ async def seed_products(shop_ids, category_ids):
         {"name": "Gym Gloves", "brand": "Nivia", "cost": 200, "price": 399, "min": 300, "category": "Gym Equipment"},
     ]
 
-    # Assign products to shops
+
     shop_products = {
         "Glamour Beauty Store": beauty_products[:8],
         "Glow Skincare": beauty_products[4:],
@@ -346,32 +346,32 @@ async def seed_products(shop_ids, category_ids):
                 continue
 
             for i, prod in enumerate(products):
-                # Determine if product is perishable based on category
+
                 perishable_categories = [
-                    "Lipstick", "Foundation", "Skincare", "Haircare", "Perfumes",  # Beauty
-                    "Fruits & Vegetables", "Dairy", "Snacks", "Beverages", "Staples"  # Grocery
+                    "Lipstick", "Foundation", "Skincare", "Haircare", "Perfumes",  
+                    "Fruits & Vegetables", "Dairy", "Snacks", "Beverages", "Staples"  
                 ]
                 is_perishable = prod["category"] in perishable_categories
 
-                # Generate expiry date for perishable items
+
                 expiry_date = None
                 clearance_discount = 20.0
                 is_on_clearance = False
 
                 if is_perishable:
-                    # Random expiry between 5 days and 6 months from now
+
                     days_until_expiry = random.choice([
-                        random.randint(5, 15),    # Some expiring very soon (for demo)
-                        random.randint(20, 45),   # Some expiring in a month
-                        random.randint(60, 180),  # Some with longer shelf life
+                        random.randint(5, 15),    
+                        random.randint(20, 45),  
+                        random.randint(60, 180),  
                     ])
                     expiry_date = datetime.now() + timedelta(days=days_until_expiry)
 
-                    # Auto-apply clearance for items expiring within 30 days
+
                     if days_until_expiry <= 30:
                         is_on_clearance = True
                         if days_until_expiry <= 7:
-                            clearance_discount = 30.0  # Higher discount for urgent items
+                            clearance_discount = 30.0  
 
                 product = Product(
                     name=prod["name"],
@@ -390,7 +390,7 @@ async def seed_products(shop_ids, category_ids):
                     is_active=True,
                     is_featured=random.random() > 0.7,
                     unit="piece" if prod["category"] not in ["Fruits & Vegetables", "Dairy", "Staples"] else "kg",
-                    # Expiry fields
+
                     is_perishable=is_perishable,
                     expiry_date=expiry_date,
                     expiry_alert_days=30,
@@ -403,13 +403,13 @@ async def seed_products(shop_ids, category_ids):
         await db.commit()
         print(f"✓ Created {total_products} products across shops")
 
-        # Return product info for orders
+
         result = await db.execute(text("SELECT id, name, price, cost_price, shop_id FROM products"))
         return [(row[0], row[1], row[2], row[3], row[4]) for row in result.fetchall()]
 
 
 async def seed_customers():
-    """Create test customers"""
+
     customers = [
         {"name": "Ananya Gupta", "email": "ananya@email.com", "phone": "+91 98765 43210", "address": "123 MG Road, Mumbai 400001"},
         {"name": "Vikram Singh", "email": "vikram@email.com", "phone": "+91 87654 32109", "address": "456 Brigade Road, Bangalore 560001"},
@@ -445,13 +445,13 @@ async def seed_customers():
 
 
 async def seed_users(shop_ids):
-    """Create user accounts"""
+
     password_hash = hash_password("qwert12345")
 
     users = [
-        # Super Admin
+
         {"name": "Platform Admin", "email": "superadmin@kommandai.com", "role": "super_admin", "shop_id": None},
-        # Shop Owners (Admins)
+
         {"name": "Priya Sharma", "email": "admin@kommandai.com", "role": "admin", "shop_id": shop_ids.get("Glamour Beauty Store")},
         {"name": "Rahul Verma", "email": "rahul@techhub.com", "role": "admin", "shop_id": shop_ids.get("TechHub Electronics")},
         {"name": "Amit Patel", "email": "amit@freshmart.com", "role": "admin", "shop_id": shop_ids.get("Fresh Mart Grocery")},
@@ -459,7 +459,7 @@ async def seed_users(shop_ids):
         {"name": "Meera Joshi", "email": "meera@glowskin.com", "role": "admin", "shop_id": shop_ids.get("Glow Skincare")},
         {"name": "Karthik Nair", "email": "karthik@gadgetworld.com", "role": "admin", "shop_id": shop_ids.get("Gadget World")},
         {"name": "Rajesh Kumar", "email": "rajesh@fitzone.com", "role": "admin", "shop_id": shop_ids.get("FitZone Sports")},
-        # Customers
+
         {"name": "Test Customer", "email": "customer@kommandai.com", "role": "customer", "shop_id": None},
         {"name": "Ananya Gupta", "email": "ananya@email.com", "role": "customer", "shop_id": None},
         {"name": "Vikram Singh", "email": "vikram@email.com", "role": "customer", "shop_id": None},
@@ -485,25 +485,25 @@ async def seed_users(shop_ids):
 
 
 async def seed_orders(products_data, customer_ids):
-    """Create sample orders with profit tracking"""
+
     statuses = ["pending", "confirmed", "shipped", "delivered"]
 
     async with async_session() as db:
         customer_list = list(customer_ids.items())
         order_count = 0
 
-        for _ in range(150):  # Create 150 orders
+        for _ in range(150): 
             product = random.choice(products_data)
             product_id, product_name, price, cost_price, shop_id = product
             customer = random.choice(customer_list)
             qty = random.randint(1, 5)
 
-            # Simulate bargaining - sometimes sell at discount
-            bargain_discount = random.choice([0, 0, 0, 0.05, 0.1, 0.15, 0.2])  # 60% at MRP, 40% bargained
+
+            bargain_discount = random.choice([0, 0, 0, 0.05, 0.1, 0.15, 0.2])  
             final_price = price * (1 - bargain_discount)
 
-            # Calculate profit fields
-            cost = cost_price or (price * 0.6)  # Assume 40% margin if no cost
+
+            cost = cost_price or (price * 0.6)  
             total_amount = final_price * qty
             total_cost = cost * qty
             profit = total_amount - total_cost
@@ -539,14 +539,14 @@ async def seed_orders(products_data, customer_ids):
 async def main():
     print("\n🌱 Seeding KommandAI Database with Comprehensive Data...\n")
 
-    # Initialize tables if they don't exist
+
     await init_db()
     print("✓ Database tables initialized")
 
-    # Clear existing data
+
     await clear_data()
 
-    # Seed in order (respecting foreign keys)
+
     shop_category_ids = await seed_shop_categories()
     product_category_ids = await seed_product_categories()
     shop_ids = await seed_shops(shop_category_ids)
@@ -555,27 +555,6 @@ async def main():
     await seed_users(shop_ids)
     await seed_orders(products_data, customer_ids)
 
-    print("\n" + "="*60)
-    print("✅ Database seeded successfully!")
-    print("="*60)
-    print("\n📊 Data Summary:")
-    print(f"   • 10 Shop Categories")
-    print(f"   • 21 Product Categories")
-    print(f"   • 8 Shops (all verified)")
-    print(f"   • 70+ Products with cost & min prices")
-    print(f"   • 12 Customers")
-    print(f"   • 14 Users (1 Super Admin, 7 Shop Admins, 6 Customers)")
-    print(f"   • 150 Orders with profit tracking")
-    print()
-    print("🔐 Demo Accounts (password: qwert12345):")
-    print("   ┌─────────────┬──────────────────────────────┐")
-    print("   │ Role        │ Email                        │")
-    print("   ├─────────────┼──────────────────────────────┤")
-    print("   │ Super Admin │ superadmin@kommandai.com     │")
-    print("   │ Shop Admin  │ admin@kommandai.com          │")
-    print("   │ Customer    │ customer@kommandai.com       │")
-    print("   └─────────────┴──────────────────────────────┘")
-    print()
 
 
 if __name__ == "__main__":

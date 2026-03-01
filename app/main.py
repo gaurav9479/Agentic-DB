@@ -10,13 +10,13 @@ from app.services.user_service import create_default_users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+
     await init_db()
-    # Create default users
+
     async with async_session() as session:
         await create_default_users(session)
     yield
-    # Shutdown
+
     pass
 
 
@@ -27,7 +27,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+
 cors_origins = settings.CORS_ORIGINS if settings.CORS_ORIGINS else ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -37,7 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routes
+
 app.include_router(router, prefix="/api")
 
 

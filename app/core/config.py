@@ -5,7 +5,7 @@ load_dotenv()
 
 
 class Settings:
-    PROJECT_NAME: str = "AgentSamosa"
+    PROJECT_NAME: str = "Agentic DB"
     VERSION: str = "1.0.0"
 
     DATABASE_URL: str = os.getenv(
@@ -15,7 +15,7 @@ class Settings:
 
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     
-    # CORS settings
+
     CORS_ORIGINS: list = os.getenv(
         "CORS_ORIGINS",
         "http://localhost:3000,http://localhost:5173"

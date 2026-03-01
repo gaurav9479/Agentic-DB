@@ -8,7 +8,7 @@ from app.core.database import Base
 
 class UserRole(enum.Enum):
     SUPER_ADMIN = "super_admin"
-    ADMIN = "admin"  # Shop owner
+    ADMIN = "admin"   
     CUSTOMER = "customer"
 
 
@@ -21,26 +21,26 @@ class User(Base):
     name = Column(String(200), nullable=False)
     phone = Column(String(20), nullable=True)
 
-    # Role
+
     role = Column(String(20), default=UserRole.CUSTOMER.value, index=True)
 
-    # For Admin (shop owner) - link to their shop
+
     shop_id = Column(Integer, ForeignKey("shops.id"), nullable=True)
 
-    # Status
+
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
-    # Password reset
+
     reset_token = Column(String(100), nullable=True, index=True)
     reset_token_expires = Column(DateTime(timezone=True), nullable=True)
 
-    # Timestamps
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
 
-    # Relationships
+
     shop = relationship("Shop", back_populates="owner")
 
     @property

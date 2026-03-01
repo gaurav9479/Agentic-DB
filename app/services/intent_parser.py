@@ -8,11 +8,9 @@ from app.schemas.command import ParsedIntent, MultiStepPlan
 
 
 class FallbackParser:
-    """Rule-based fallback parser for when AI API is unavailable (rate limits, errors)"""
 
-    # Hindi/Hinglish keyword mappings to actions
     KEYWORD_PATTERNS = {
-        # Product commands
+
         'list_products': [
             r'(?:सभी|सारे|all)\s*(?:प्रोडक्ट|products?|प्रोडक्ट्स)',
             r'(?:प्रोडक्ट|products?|प्रोडक्ट्स)\s*(?:दिखाओ|दिखा|dikhao|list|show|batao|बताओ)',
@@ -30,7 +28,7 @@ class FallbackParser:
             r'(.+)\s*(?:खोजो|khojo|ढूंढो|dhundho|search)',
         ],
 
-        # Order commands
+
         'list_orders': [
             r'(?:सभी|सारे|all)\s*(?:orders?|ऑर्डर|ऑर्डर्स)',
             r'(?:orders?|ऑर्डर)\s*(?:दिखाओ|दिखा|dikhao|list|show|batao|बताओ)',
@@ -43,7 +41,7 @@ class FallbackParser:
             r'(?:my|मेरे)\s*(?:orders?|ऑर्डर)\s*(?:दिखाओ|dikhao|show)?',
         ],
 
-        # Dashboard/Stats commands
+
         'get_shop_dashboard': [
             r'(?:dashboard|डैशबोर्ड)',
             r'(?:shop|दुकान|store)\s*(?:stats?|statistics|स्टैट्स)',
@@ -65,7 +63,7 @@ class FallbackParser:
             r'(?:मेरा|mera|my)\s*(?:profit|प्रॉफिट|मुनाफा)',
         ],
 
-        # Shop commands (Super Admin)
+
         'list_shops': [
             r'(?:सभी|सारे|all)\s*(?:shops?|दुकान|दुकानें|stores?)',
             r'(?:shops?|दुकान|दुकानें)\s*(?:दिखाओ|दिखा|dikhao|list|show|batao)',
@@ -81,27 +79,27 @@ class FallbackParser:
             r'(?:shop|दुकान)\s*(.+)?\s*(?:verify|वेरिफाई|approve|अप्रूव)\s*(?:करो|karo)?',
         ],
 
-        # Customer commands
+
         'list_customers': [
             r'(?:सभी|सारे|all)\s*(?:customers?|ग्राहक|कस्टमर)',
             r'(?:customers?|ग्राहक|कस्टमर)\s*(?:दिखाओ|dikhao|list|show|batao)',
             r'(?:show|list|दिखाओ|dikhao)\s*(?:all\s*)?(?:customers?|ग्राहक)',
         ],
 
-        # User commands
+
         'list_users': [
             r'(?:सभी|सारे|all)\s*(?:users?|यूज़र)',
             r'(?:users?|यूज़र)\s*(?:दिखाओ|dikhao|list|show)',
         ],
 
-        # Category commands
+
         'list_shop_categories': [
             r'(?:categories|कैटेगरी|श्रेणी)\s*(?:दिखाओ|dikhao|list|show)?',
             r'(?:shop|दुकान)\s*(?:categories|कैटेगरी)',
         ],
     }
 
-    # Entity mapping based on action
+
     ACTION_ENTITY_MAP = {
         'list_products': 'product',
         'get_low_stock': 'product',
@@ -122,7 +120,7 @@ class FallbackParser:
 
     @classmethod
     def parse(cls, user_input: str) -> Optional[ParsedIntent]:
-        """Try to parse user input using rule-based patterns"""
+
         text = user_input.lower().strip()
 
         for action, patterns in cls.KEYWORD_PATTERNS.items():
@@ -131,7 +129,7 @@ class FallbackParser:
                 if match:
                     parameters = {}
 
-                    # Extract parameters from captured groups
+
                     if match.groups():
                         query = match.group(1)
                         if query and query.strip():
@@ -140,7 +138,7 @@ class FallbackParser:
                             elif action == 'verify_shop':
                                 parameters['name'] = query.strip()
 
-                    # Extract status filters for orders
+
                     if action == 'list_orders':
                         if any(s in text for s in ['pending', 'पेंडिंग']):
                             parameters['status'] = 'pending'
@@ -314,7 +312,7 @@ JSON output:"""
             response = self.model.generate_content(prompt)
             response_text = response.text.strip()
 
-            # Clean up response if wrapped in markdown code blocks
+
             if response_text.startswith("```"):
                 response_text = response_text.split("```")[1]
                 if response_text.startswith("json"):
@@ -323,7 +321,7 @@ JSON output:"""
 
             parsed = json.loads(response_text)
 
-            # Check if it's a multi-step plan
+
             if "steps" in parsed:
                 steps = [ParsedIntent(**step) for step in parsed["steps"]]
                 return MultiStepPlan(steps=steps)
@@ -331,7 +329,7 @@ JSON output:"""
             return ParsedIntent(**parsed)
 
         except json.JSONDecodeError as e:
-            # Try fallback parser for JSON decode errors
+
             fallback_result = FallbackParser.parse(user_input)
             if fallback_result:
                 return fallback_result
@@ -341,16 +339,16 @@ JSON output:"""
                 parameters={"error": f"Failed to parse intent: {str(e)}"},
             )
         except Exception as e:
-            # Try fallback parser when AI API fails (rate limits, errors)
+
             error_str = str(e)
             fallback_result = FallbackParser.parse(user_input)
             if fallback_result:
-                # Add note that fallback was used
+
                 fallback_result.parameters = fallback_result.parameters or {}
                 fallback_result.parameters['_fallback'] = True
                 return fallback_result
 
-            # If fallback also fails, return error
+
             return ParsedIntent(
                 action="error",
                 entity=None,
@@ -363,7 +361,7 @@ JSON output:"""
         context: Optional[Dict[str, Any]] = None,
         missing_params: Optional[List[str]] = None,
     ) -> ParsedIntent:
-        """Re-parse with information about missing parameters"""
+
         retry_prompt = user_input
         if missing_params:
             retry_prompt = f"{user_input}\n\n[System: Previous attempt was missing: {', '.join(missing_params)}. Please ask the user for these values.]"

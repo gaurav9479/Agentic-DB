@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 
 
-# ============== SHOP CATEGORY SCHEMAS ==============
+
 
 class ShopCategoryCreate(BaseModel):
     name: str
@@ -40,7 +40,7 @@ class ShopCategoryWithCount(ShopCategoryResponse):
     shop_count: int = 0
 
 
-# ============== SHOP SCHEMAS ==============
+
 
 class ShopCreate(BaseModel):
     name: str
@@ -105,7 +105,7 @@ class ShopWithCategory(ShopResponse):
 
 
 class ShopDashboardStats(BaseModel):
-    """Dashboard stats for shop owner"""
+
     total_products: int = 0
     active_products: int = 0
     low_stock_count: int = 0

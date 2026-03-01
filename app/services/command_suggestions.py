@@ -12,24 +12,22 @@ from dataclasses import dataclass
 class CommandTemplate:
     command: str
     description: str
-    description_hi: str  # Hindi description
+    description_hi: str  
     template: str
-    template_hi: str  # Hindi template
+    template_hi: str  
     examples: List[str]
-    examples_hi: List[str]  # Hindi/Hinglish examples
+    examples_hi: List[str]  
     category: str
-    category_hi: str  # Hindi category
-    roles: List[str]  # super_admin, admin, customer
-    keywords_hi: List[str] = None  # Hindi keywords for search
-    action_type: str = "execute"  # execute, prefill_form
+    category_hi: str  
+    roles: List[str]  
+    keywords_hi: List[str] = None  
+    action_type: str = "execute"  
 
 
-# ============== SUPER ADMIN COMMANDS ==============
-# Focus: Platform management, shop verification, categories, user management
-# NO product creation (too complex, delegate to shop admin)
+
 
 SUPER_ADMIN_COMMANDS: List[CommandTemplate] = [
-    # Shop Management
+
     CommandTemplate(
         command="prefill_shop_form",
         description="Fill shop registration form with details",
@@ -176,7 +174,7 @@ SUPER_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["जानकारी", "डिटेल्स"]
     ),
 
-    # Platform Stats
+
     CommandTemplate(
         command="get_platform_stats",
         description="View platform statistics",
@@ -199,7 +197,7 @@ SUPER_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["आंकड़े", "स्टैट्स", "डैशबोर्ड"]
     ),
 
-    # User Management
+
     CommandTemplate(
         command="list_users",
         description="List all users",
@@ -242,7 +240,7 @@ SUPER_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["यूज़र", "जानकारी"]
     ),
 
-    # Category Management
+
     CommandTemplate(
         command="list_shop_categories",
         description="List shop categories",
@@ -284,11 +282,10 @@ SUPER_ADMIN_COMMANDS: List[CommandTemplate] = [
 ]
 
 
-# ============== SHOP ADMIN COMMANDS ==============
-# Focus: Product management, order management, inventory, shop dashboard
+
 
 SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
-    # Dashboard
+
     CommandTemplate(
         command="get_shop_dashboard",
         description="View your shop dashboard",
@@ -311,7 +308,7 @@ SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["डैशबोर्ड", "आंकड़े", "स्टैट्स"]
     ),
 
-    # Product Management
+
     CommandTemplate(
         command="create_product",
         description="Create a new product with cost and selling price",
@@ -456,7 +453,7 @@ SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["हटाओ", "डिलीट", "निकालो"]
     ),
 
-    # Order Management
+
     CommandTemplate(
         command="list_orders",
         description="List all orders",
@@ -577,7 +574,7 @@ SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["कैंसल", "रद्द"]
     ),
 
-    # Customer Management
+
     CommandTemplate(
         command="list_customers",
         description="List all customers",
@@ -617,7 +614,7 @@ SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["खोजो", "ढूंढो", "सर्च"]
     ),
 
-    # Billing & Sales
+
     CommandTemplate(
         command="sell_at_price",
         description="Sell product at bargained price",
@@ -724,11 +721,9 @@ SHOP_ADMIN_COMMANDS: List[CommandTemplate] = [
 ]
 
 
-# ============== CUSTOMER COMMANDS ==============
-# Focus: Browsing, searching, placing orders, managing their orders
 
 CUSTOMER_COMMANDS: List[CommandTemplate] = [
-    # Browsing
+
     CommandTemplate(
         command="list_shop_categories",
         description="Browse shop categories",
@@ -793,7 +788,7 @@ CUSTOMER_COMMANDS: List[CommandTemplate] = [
         keywords_hi=["खोजो", "ढूंढो", "सर्च"]
     ),
 
-    # Order Management
+
     CommandTemplate(
         command="place_order",
         description="Place a new order",
@@ -898,7 +893,7 @@ CUSTOMER_COMMANDS: List[CommandTemplate] = [
 ]
 
 
-# Combine all templates
+
 COMMAND_TEMPLATES: List[CommandTemplate] = (
     SUPER_ADMIN_COMMANDS + SHOP_ADMIN_COMMANDS + CUSTOMER_COMMANDS
 )
@@ -916,11 +911,11 @@ class CommandSuggestionService:
         role: str,
         limit: int = 5
     ) -> List[Dict[str, Any]]:
-        """Get command suggestions based on partial query and user role - supports Hindi"""
+
         query = query.lower().strip()
         suggestions = []
 
-        # Filter by role
+
         role_templates = [t for t in self.templates if role in t.roles]
 
         if not query:
@@ -929,7 +924,7 @@ class CommandSuggestionService:
         for template in role_templates:
             score = 0
 
-            # English matching
+
             if query in template.command.lower():
                 score += 3
             if query in template.description.lower():
@@ -941,7 +936,7 @@ class CommandSuggestionService:
             if query in template.category.lower():
                 score += 1
 
-            # Hindi matching
+
             if query in template.description_hi:
                 score += 2
             if query in template.template_hi:
@@ -952,7 +947,7 @@ class CommandSuggestionService:
                     break
             if query in template.category_hi:
                 score += 1
-            # Match Hindi keywords
+
             if template.keywords_hi:
                 for keyword in template.keywords_hi:
                     if query in keyword or keyword in query:
@@ -1067,7 +1062,7 @@ class CommandSuggestionService:
         return suggestions
 
     def get_command_help(self, command: str) -> Optional[Dict[str, Any]]:
-        """Get detailed help for a specific command - with Hindi support"""
+
         for template in self.templates:
             if template.command == command:
                 return {

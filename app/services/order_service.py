@@ -12,7 +12,7 @@ class OrderService:
         self.db = db
 
     async def create(self, data: OrderCreate) -> Optional[Order]:
-        # Get product to calculate total
+
         result = await self.db.execute(
             select(Product).where(Product.id == data.product_id)
         )
@@ -25,10 +25,10 @@ class OrderService:
         total_amount = unit_price * data.quantity
 
         order = Order(
-            shop_id=product.shop_id,  # Set shop from product
+            shop_id=product.shop_id,  
             product_id=data.product_id,
-            product_name=product.name,  # Snapshot product name
-            unit_price=unit_price,  # Snapshot price at order time
+            product_name=product.name,  
+            unit_price=unit_price,  
             quantity=data.quantity,
             total_amount=total_amount,
             customer_name=data.customer_name,
@@ -77,7 +77,7 @@ class OrderService:
             return None
 
         if order.status in [OrderStatus.SHIPPED.value, OrderStatus.DELIVERED.value]:
-            return None  # Cannot cancel shipped/delivered orders
+            return None  
 
         order.status = OrderStatus.CANCELLED.value
         await self.db.commit()
